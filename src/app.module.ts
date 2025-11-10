@@ -9,26 +9,15 @@ import { AppManager } from './app.manager';
   imports: [
     ClientsModule.register([
       {
-        name: 'TRANSFORMER_PRODUCER',
+        name: 'KAFKA_CLIENT', // ตัวเดียวจบ
         transport: Transport.KAFKA,
         options: {
           client: {
-            clientId: 'transformer-producer',
-            brokers: ['localhost:9092'],
-          },
-          producerOnlyMode: true,
-        },
-      },
-      {
-        name: 'TRANSFORMER_REPLY',
-        transport: Transport.KAFKA,
-        options: {
-          client: {
-            clientId: 'transformer-reply',
+            clientId: 'api-gateway',
             brokers: ['localhost:9092'],
           },
           consumer: {
-            groupId: 'transformer-reply-group',
+            groupId: 'api-gateway-group', // ต้องมี consumer เพื่อรับ reply
           },
         },
       },
