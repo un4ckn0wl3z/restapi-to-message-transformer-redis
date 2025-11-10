@@ -8,9 +8,9 @@ export class AppController {
     private manager: AppManager,
   ) {}
 
-  @Post("test/transform")
-  handleTestTransformRequest(@Body() requestBody: any, @Res() response: Response) {
-    this.manager.handleTestTransformRequest(requestBody, response);
+  @Post('test/transform')
+  handleTestTransformRequest(@Body() body: any, @Res() res: Response) {
+    this.manager.handleTestTransformRequest(body, res);
   }
 
 }

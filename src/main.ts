@@ -1,32 +1,30 @@
+// main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
-  // Create the HTTP server instance for REST API
   const app = await NestFactory.create(AppModule);
 
-  // Create Kafka microservice instance
-  const kafkaMicroservice = app.connectMicroservice<MicroserviceOptions>({
+  // ยังต้องมีอยู่! เพื่อให้ TRANSFORMER_REPLY เริ่ม consume ได้
+  app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.KAFKA,
     options: {
       client: {
-        brokers: ['localhost:9092'], // Update with your Kafka broker addresses
+        clientId: 'api-gateway-hybrid',
+        brokers: ['localhost:9092'],
       },
       consumer: {
-        groupId: 'my-consumer-group', // Update with your desired consumer group ID
+        groupId: 'transformer-reply-group', // ต้องตรงกับใน module
+        allowAutoTopicCreation: true,
       },
     },
   });
 
-  // Start the Kafka microservice
   await app.startAllMicroservices();
+  await app.listen(process.env.PORT || 3000);
 
-  // Start the REST API
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
-
-  // console.log(`Application is running on: http://localhost:${port}`);
+  console.log(`API Gateway running on port ${process.env.PORT || 3000}`);
 }
 
 bootstrap();

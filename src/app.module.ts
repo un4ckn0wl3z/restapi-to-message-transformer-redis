@@ -1,29 +1,40 @@
+// app.module.ts
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppManager } from './app.manager';
-import { RedisEventEmitter } from './redis-event-emitter.service';
 
 @Module({
   imports: [
-    EventEmitterModule.forRoot(),
     ClientsModule.register([
       {
-        name: 'TRANSFROMER_PRODUCER',
+        name: 'TRANSFORMER_PRODUCER',
         transport: Transport.KAFKA,
         options: {
-          producerOnlyMode: true,
           client: {
-            clientId: 'transformerProducer',
+            clientId: 'transformer-producer',
             brokers: ['localhost:9092'],
-          }
-        }
+          },
+          producerOnlyMode: true,
+        },
+      },
+      {
+        name: 'TRANSFORMER_REPLY',
+        transport: Transport.KAFKA,
+        options: {
+          client: {
+            clientId: 'transformer-reply',
+            brokers: ['localhost:9092'],
+          },
+          consumer: {
+            groupId: 'transformer-reply-group',
+          },
+        },
       },
     ]),
   ],
   controllers: [AppController],
-  providers: [AppManager, AppService, RedisEventEmitter],
+  providers: [AppManager, AppService],
 })
 export class AppModule {}

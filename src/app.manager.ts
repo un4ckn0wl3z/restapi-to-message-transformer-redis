@@ -1,33 +1,18 @@
-import { Injectable } from "@nestjs/common";
-import { EventEmitter2 } from "@nestjs/event-emitter";
-import { AppService } from "./app.service";
+// app.manager.ts
+import { Injectable } from '@nestjs/common';
+import { AppService } from './app.service';
 import { Response } from 'express';
-import { RedisEventEmitter } from "./redis-event-emitter.service";
 
 @Injectable()
 export class AppManager {
-  constructor(
-    private readonly appService: AppService,
-    private readonly redisEventEmitter: RedisEventEmitter,
-  ) {}
+  constructor(private readonly appService: AppService) {}
 
-  async handleTestTransformRequest(request: any, response: Response): Promise<any> {
+  async handleTestTransformRequest(request: any, response: Response) {
     try {
-      const sessionId = request.header.session;
-
-      // Start listening for response BEFORE triggering the job
-      const ackPromise = this.redisEventEmitter.once(sessionId, 30000); // 30s timeout
-
-      // Trigger the transformation (this will publish to queue or call microservice)
-      await this.appService.testTransform(request);
-
-      // Wait for acknowledgment from transformer service
-      const ack = await ackPromise;
-
-      console.log("Received ack from transformer service: ", ack);
-      return response.status(200).json(ack);
+      const result = await this.appService.testTransform(request);
+      response.status(200).json(result);
     } catch (error) {
-      return response.status(400).json({ error: error.message });
+      response.status(500).json({ error: error.message || 'Transform failed' });
     }
   }
 }
