@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AppManager } from './app.manager';
+import { CustomReplyKafkaClient } from './custom-kafka.client';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { AppManager } from './app.manager';
             groupId: 'api-gateway-group', // ต้องมี consumer เพื่อรับ reply
           },
         },
+        customClass: CustomReplyKafkaClient
       },
     ]),
   ],
