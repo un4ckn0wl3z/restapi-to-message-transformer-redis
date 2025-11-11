@@ -6,26 +6,36 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AppService implements OnModuleInit {
+  private readonly requestTopic = 'test.request.topic';
+  private readonly replyTopic = 'test.reply.topic'; // ✅ ใช้ topic ที่ register ไว้แล้ว
+
   constructor(
     @Inject('KAFKA_CLIENT') private readonly kafka: ClientKafka,
   ) {}
 
   async onModuleInit() {
-    // ✅ Subscribe ไว้ล่วงหน้า (เรียกครั้งเดียว)
-    this.kafka.subscribeToResponseOf('test.request.topic');
+    // ✅ subscribe ไว้ล่วงหน้าเฉพาะ reply topic (เพราะเรารู้ชื่อแน่นอน)
+    this.kafka.subscribeToResponseOf(this.replyTopic);
     await this.kafka.connect();
   }
 
-  async testTransform(data: any): Promise<any> {
-    const correlationId = uuidv4();
+async testTransform(data: any): Promise<any> {
+  const correlationId = uuidv4();
 
-    // ❌ ไม่ต้องสร้าง replyTopic ใหม่ทุกครั้ง
-    // ✅ NestJS จะจัดการ replyTopic ให้เอง (เช่น test.request.topic.reply)
-    const response$ = this.kafka.send('test.request.topic', {
-      correlationId,
-      payload: data,
-    });
+  const response$ = this.kafka.send(
+    this.requestTopic,
+    {
+      value: {
+        correlationId,
+        payload: data,
+      },
+      headers: {
+        'reply-topic': this.replyTopic,
+        'correlation-id': correlationId,
+      },
+    }
+  );
 
-    return firstValueFrom(response$);
-  }
+  return firstValueFrom(response$);
+}
 }
